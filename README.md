@@ -48,7 +48,7 @@ AAAA
 Hello! This is the default message
 ```
 
-This will be the output [report1](https://github.com/invictus1306/functrace/tests/report1)
+This will be the output [report1](https://github.com/invictus1306/functrace/blob/master/tests/report1)
 
 ```shell
 $ drrun -c libfunctrace.so -report_file report2 -disassembly -verbose -- ../tests/simple_test
@@ -59,7 +59,7 @@ Hello! This is the default message
 
 
 
-This will be the output [report2](https://github.com/invictus1306/functrace/tests/report2)
+This will be the output [report2](https://github.com/invictus1306/functrace/blob/master/tests/report2)
 
 ```shell
 $ drrun -c libfunctrace.so -report_file ../tests/report3 -disas_func print_default -- ../tests/simple_test
@@ -68,7 +68,7 @@ AAAA
 Hello! This is the default message
 ```
 
-This will be the output [report3](https://github.com/invictus1306/functrace/tests/report3)
+This will be the output [report3](https://github.com/invictus1306/functrace/blob/master/tests/report3)
 
 ```shell
 $ drrun -c libfunctrace.so -report_file ../tests/report4 -wrap_function print_default -wrap_function_args 0 -- ../tests/simple_test
@@ -78,7 +78,7 @@ AAAA
 Hello! This is the default message
 ```
 
-This will be the output [report4](https://github.com/invictus1306/functrace/tests/report4)
+This will be the output [report4](https://github.com/invictus1306/functrace/blob/master/tests/report4)
 
 Using [beebug](https://github.com/invictus1306/beebug) it is possible to see the reports graphically.
 
