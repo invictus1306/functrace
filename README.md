@@ -28,7 +28,7 @@ $ drrun -c libfunctrace.so -- target
 
 #### Options
 
-The following *[functrace*](https://github.com/invictus1306/functrace) options are supported:
+The following *[functrace]*(https://github.com/invictus1306/functrace) options are supported:
 
 ```latex
 -disassembly						-> disassemble all the functions 
@@ -84,4 +84,4 @@ Using [beebug](https://github.com/invictus1306/beebug) it is possible to see the
 
 #### Real case - Vulnerability Analysis
 
-From vulnerability report to a crafted packet using instrumentation [https://invictus1306.github.io/2019/01/01/functrace.html]
+From vulnerability report to a crafted packet using instrumentation [https://invictus1306.github.io/vulnerabilitis/2018/12/29/functrace.html]
