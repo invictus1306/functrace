@@ -13,7 +13,7 @@
 #include <fstream>
 #include <signal.h>
 
-#define len 256
+#define LEN 256
 
 static void *mod_lock;
 static void *wrap_lock;
@@ -25,11 +25,11 @@ typedef struct option_t {
     bool disassembly;
     bool verbose;
     bool disassembly_function;
-    char function_name[len];
+    char function_name[LEN];
     bool report_file;
-    char report_file_name[len];
+    char report_file_name[LEN];
     bool wrap_function;
-    char wrap_function_name[len];
+    char wrap_function_name[LEN];
     size_t wrap_function_args;
 } option_t;
 
@@ -77,8 +77,12 @@ static bool enumerate_sym(const char *name, size_t modoffs, void *data) {
 static void event_module_load(void *drcontext, const module_data_t *mod, bool loaded) {
     app_pc mod_base = mod->start;
     module_data_t *data = dr_get_main_module();
-    
 
+    if (data == NULL) {
+        dr_fprintf(STDERR, "No main module found! \n");
+        return;
+    }
+    
     const char *module_name = mod->names.file_name;
 
     if (module_name == NULL) {
@@ -88,9 +92,10 @@ static void event_module_load(void *drcontext, const module_data_t *mod, bool lo
     if (options.verbose)
         dr_fprintf(fd, "Module name: %s - Full path: %s \n", module_name, mod->full_path);
 
-
-    if (mod_base != data->start)
+    if (mod_base != data->start) {
+        dr_free_module_data(data);
         return;
+    }
 
     drsym_error_t symr;
     symr = drsym_enumerate_symbols(mod->full_path, enumerate_sym, NULL, DRSYM_DEFAULT_FLAGS);
@@ -119,10 +124,10 @@ static drsym_info_t* drsym_obj() {
     drsym_o = (drsym_info_t*)malloc(sizeof(drsym_info_t));
     drsym_o->struct_size = sizeof(drsym_info_t);
     drsym_o->debug_kind = DRSYM_SYMBOLS;    
-    drsym_o->name_size = len;
-    drsym_o->file_size = len;
-    drsym_o->file=(char*)malloc(len);
-    drsym_o->name=(char*)malloc(len);
+    drsym_o->name_size = LEN;
+    drsym_o->file_size = LEN;
+    drsym_o->file=(char*)malloc(LEN);
+    drsym_o->name=(char*)malloc(LEN);
     return drsym_o;
 }
  
@@ -143,13 +148,24 @@ static dr_emit_flags_t event_bb_analysis(void *drcontext, void *tag, instrlist_t
     drsym_error_t symres;
     
     instr  = instrlist_first_app(bb);
+
+    if (instr == NULL)
+        return DR_EMIT_DEFAULT;
+
     app_pc pc = instr_get_app_pc(instr);
 
-    data = dr_get_main_module();
     mod = dr_lookup_module(pc);
     
+    if (mod == NULL)
+        return DR_EMIT_DEFAULT;
+        
     app_pc mod_base = mod->start;
+
+    data = dr_get_main_module();
     
+    if (data == NULL)
+        return DR_EMIT_DEFAULT;
+
     if (mod_base != data->start)
         return DR_EMIT_DEFAULT;
     
@@ -157,7 +173,6 @@ static dr_emit_flags_t event_bb_analysis(void *drcontext, void *tag, instrlist_t
 
     syminfo = drsym_obj();
 
-    drsym_info_t *  info;
     size_t offset = (size_t)pc - (size_t)mod_base;
     syminfo->start_offs = 0;
     syminfo->end_offs = 0;
@@ -174,8 +189,7 @@ static dr_emit_flags_t event_bb_analysis(void *drcontext, void *tag, instrlist_t
         if (!options.disassembly && options.disassembly_function && !strcmp(options.function_name, functions.name_function)){
             instrlist_disassemble(drcontext, (app_pc)tag, bb, fd);
         }
-    }
-    else {
+    } else {
         functions.pc = (size_t)pc;
         dr_fprintf(fd, "[NOSYM] PC: 0x%x Function: NoSym\n", functions.pc);
         if (options.disassembly && !options.disassembly_function)
@@ -184,9 +198,9 @@ static dr_emit_flags_t event_bb_analysis(void *drcontext, void *tag, instrlist_t
 
     dr_fprintf(fd, "\n");
     dr_mutex_unlock(mod_lock);
-
-    dr_free_module_data(data);
+    
     dr_free_module_data(mod);
+    dr_free_module_data(data);
 
     return DR_EMIT_DEFAULT;
 }
@@ -249,25 +263,25 @@ static void options_init(int argc, const char *argv[]) {
         else if (strcmp(elem, "-disas_func") == 0){
             USAGE_CHECK((i + 1) < argc, "missing disassembly function");
             elem = argv[++i];
-            if (strlen(elem) < len) {
+            if (strlen(elem) < LEN) {
                 options.disassembly_function = true;
-                memcpy(options.function_name, elem, len);
+                memcpy(options.function_name, elem, LEN);
             }
         }
         else if (strcmp(elem, "-report_file") == 0){
             USAGE_CHECK((i + 1) < argc, "missing report file");
             elem = argv[++i];
-            if (strlen(elem) < len) {
+            if (strlen(elem) < LEN) {
                 options.report_file = true;
-                memcpy(options.report_file_name, elem, len);
+                memcpy(options.report_file_name, elem, LEN);
             }
         }
         else if (strcmp(elem, "-wrap_function") == 0){
             USAGE_CHECK((i + 1) < argc, "missing function to wrap");
             elem = argv[++i];
-            if (strlen(elem) < len) {
+            if (strlen(elem) < LEN) {
                 options.wrap_function = true;
-                memcpy(options.wrap_function_name, elem, len);
+                memcpy(options.wrap_function_name, elem, LEN);
             }
         }
         else if (strcmp(elem, "-wrap_function_args") == 0){
@@ -302,7 +316,7 @@ DR_EXPORT void dr_client_main(client_id_t id, int argc, const char *argv[]) {
     wrap_lock = dr_mutex_create();
 
     if (!options.report_file) {
-        dr_printf("report file name required!\n");
+        dr_printf("The report file name is required!\n");
         dr_abort();
     }
 
