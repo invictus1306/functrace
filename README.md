@@ -41,43 +41,41 @@ The following *[functrace]*(https://github.com/invictus1306/functrace) options a
 
 #### Simple usage
 
+##### Option *-verbose*
 ```shell
 $ drrun -c libfunctrace.so -report_file report1 -verbose -- ../tests/simple_test
 Please enter a message: 
 AAAA
 Hello! This is the default message
 ```
-
 This will be the output [report1](https://github.com/invictus1306/functrace/blob/master/tests/report1)
 
+##### Option *-disassemby*
 ```shell
 $ drrun -c libfunctrace.so -report_file report2 -disassembly -verbose -- ../tests/simple_test
 Please enter a message: 
 AAAA
 Hello! This is the default message
 ```
-
-
-
 This will be the output [report2](https://github.com/invictus1306/functrace/blob/master/tests/report2)
 
+##### Option *-disas_func*
 ```shell
-$ drrun -c libfunctrace.so -report_file ../tests/report3 -disas_func print_default -- ../tests/simple_test
+$ drrun -c libfunctrace.so -report_file ../tests/report3 -disas_func print_default -verbose -- ../tests/simple_test
 Please enter a message: 
 AAAA
 Hello! This is the default message
 ```
-
 This will be the output [report3](https://github.com/invictus1306/functrace/blob/master/tests/report3)
 
+##### Option *-wrap_function* and *-wrap_function_args*
 ```shell
-$ drrun -c libfunctrace.so -report_file ../tests/report4 -wrap_function print_default -wrap_function_args 0 -- ../tests/simple_test
+$ drrun -c libfunctrace.so -report_file ../tests/report4 -wrap_function print_default -wrap_function_args 1 -- ../tests/simple_test
 WRAPPED function: print_default 
 Please enter a message: 
 AAAA
 Hello! This is the default message
 ```
-
 This will be the output [report4](https://github.com/invictus1306/functrace/blob/master/tests/report4)
 
 Using [beebug](https://github.com/invictus1306/beebug) it is possible to see the reports graphically.
