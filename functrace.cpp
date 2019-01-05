@@ -84,8 +84,6 @@ static bool enumerate_sym(const char *name, size_t modoffs, void *data) {
         }
         if (!strcmp(name, options.wrap_function_name)) {
             towrap = modoffs;
-        } else {
-            towrap = 0;
         }
     }
     return true;
@@ -139,7 +137,7 @@ static void event_module_load(void *drcontext, const module_data_t *mod, bool lo
     dr_free_module_data(data);
 }
 
-static drsym_info_t* drsym_obj(const char *ath) {
+static drsym_info_t* drsym_obj(const char *path) {
     drsym_info_t* drsym_o;
     drsym_o = (drsym_info_t*)malloc(sizeof(drsym_info_t));
     drsym_o->struct_size = sizeof(drsym_info_t);
