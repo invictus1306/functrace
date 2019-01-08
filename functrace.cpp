@@ -153,11 +153,13 @@ static drsym_info_t* drsym_obj(const char *path) {
 }
  
 static void free_drsmy_obj(drsym_info_t *drsym_o) {
-    if (drsym_o->file != NULL) 
-        free(drsym_o->file);
-    if (drsym_o->name != NULL) 
-        free(drsym_o->name);
-    free(drsym_o);
+    if (drsym_o) {
+        if (drsym_o->file != NULL) 
+            free(drsym_o->file);
+        if (drsym_o->name != NULL) 
+            free(drsym_o->name);
+        free(drsym_o);
+    }
 }
 
 static dr_emit_flags_t event_bb_analysis(void *drcontext, void *tag, instrlist_t *bb, bool for_trace, bool translating, OUT void **user_data) {
