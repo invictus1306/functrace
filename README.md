@@ -26,7 +26,7 @@ $ make -j4
 $ drrun -c libfunctrace.so -- target
 ```
 
-#### Options
+### Options
 
 The following *[functrace]*(https://github.com/invictus1306/functrace) options are supported:
 
@@ -40,30 +40,35 @@ The following *[functrace]*(https://github.com/invictus1306/functrace) options a
 -verbose                        -> verbose
 ```
 
-#### Simple usage
+### Simple usage
 
-##### Option *-verbose*
+#### Option *-verbose*
 ```shell
 $ drrun -c libfunctrace.so -report_file report -verbose -- target_program [args]
 ```
 
-##### Option *-disassemby*
+#### Option *-disassemby*
 ```shell
 $ drrun -c libfunctrace.so -report_file report -disassembly -verbose -- target_program [args]
 ```
 
-##### Option *-disas_func*
+#### Option *-disas_func*
 ```shell
 $ drrun -c libfunctrace.so -report_file report -disas_func name_function -verbose -- target_program [args]
 ```
 
-##### Option *-wrap_function* and *-wrap_function_args*
+#### Option *-wrap_function* and *-wrap_function_args*
 ```shell
-$ drrun -c libfunctrace.so -report_file report -wrap_function name_function -wrap_function_args num_args --  target_program [args]
+$ drrun -c libfunctrace.so -report_file report -wrap_function name_function -wrap_function_args num_args -- target_program [args]
+```
+
+#### Option *-cbr*
+```shell
+$ drrun -c libfunctrace.so -report_file report -cbr -- target_program [args]
 ```
 
 Using [beebug](https://github.com/invictus1306/beebug) it is possible to see the reports graphically.
 
-#### Real case - Vulnerability Analysis
+### Real case - Vulnerability Analysis
 
 From vulnerability report to a crafted packet using instrumentation [https://invictus1306.github.io/vulnerabilitis/2018/12/29/functrace.html]
