@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project (functrace)
 
-add_library(functrace SHARED functrace.cpp)
+add_library(functrace SHARED functrace.cpp bb_getinfo.cpp)
 find_package(DynamoRIO)
 configure_DynamoRIO_client(functrace)
 
