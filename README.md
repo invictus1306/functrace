@@ -35,6 +35,7 @@ The following *[functrace]*(https://github.com/invictus1306/functrace) options a
 -disas_func function_name       -> disassemble only the function function_name	
 -wrap_function function_name    -> wrap the function function_name				
 -wrap_function_args num_args    -> number of arguments of the wrapped function
+-cbr                            -> remove the bb from the cache (in case of conditional jump)
 -report_file file_name          -> report file name (required)
 -verbose                        -> verbose
 ```
