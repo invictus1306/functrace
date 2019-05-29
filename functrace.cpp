@@ -33,24 +33,67 @@ typedef struct option_t {
 
 static option_t options;
 
+
+void dump_mem(app_pc arg, app_pc address){
+    char first[MAXIMUM_PATH] = {0};
+    size_t bytes_read = 0;
+    
+    dr_safe_read(arg, BUFFER_SIZE_BYTES(first), first, &bytes_read);
+    if (bytes_read < BUFFER_SIZE_BYTES(bytes_read))
+        first[bytes_read] = '\0';
+    NULL_TERMINATE_BUFFER(first);
+    
+    if (bytes_read){
+        dr_fprintf(fd, "[DUMP];" PFX ";", address);
+        for (int j=0; j<bytes_read; j++){
+            if (first[j] == 0)
+                break;
+            dr_fprintf(fd, "0x%02x ", first[j]);
+        }
+        dr_fprintf(fd, "\n");
+    }
+}
+
 static void wrap_pre(void *wrapcxt, OUT void **user_data) {
-    size_t i;
+    size_t i = 0;
+    app_pc address = 0;
 
     dr_mutex_lock(wrap_lock);
+    address = drwrap_get_func(wrapcxt);
     for (i = 0; i < options.wrap_function_args; i++) {
+        char first[MAXIMUM_PATH] = {0};
+        size_t bytes_read = 0;
+
         app_pc arg = (app_pc) drwrap_get_arg(wrapcxt, i);
         DR_ASSERT(arg);
-        dr_fprintf(fd, "[ARG];%s;%d;"PFX"\n", options.wrap_function_name, i, arg);
+        dr_fprintf(fd, "[ARG];%s;" PFX ";%d;%d;" PFX "\n", options.wrap_function_name, address, i, options.wrap_function_args, arg);
+    
+        dump_mem(arg, address);
     }
     dr_mutex_unlock(wrap_lock);
 }
 
 static void wrap_post(void *wrapcxt, void *user_data) {
+    app_pc address = 0;
+    app_pc ret = NULL;
+    
     dr_mutex_lock(wrap_lock);
+    address = drwrap_get_func(wrapcxt);
+
+    void *drcontext = drwrap_get_drcontext(wrapcxt);
     
-    app_pc ret = (app_pc) drwrap_get_retval(wrapcxt);
+    DR_TRY_EXCEPT(drcontext, {
+        ret = (app_pc) drwrap_get_retval(wrapcxt);
+    }, {
+        ret = NULL;
+    });
     
-    dr_fprintf(fd, "[RET];%s;"PFX"\n", options.wrap_function_name, ret);
+    if (ret != NULL){
+        dr_fprintf(fd, "[RET];%s;" PFX ";" PFX "\n", options.wrap_function_name, address, ret);
+        dump_mem(ret, address);
+    } else {
+        dr_fprintf(fd, "[ERR];Return address exception\n");
+    }
     
     dr_mutex_unlock(wrap_lock);
 }
@@ -63,7 +106,7 @@ static void iterate_imports(const module_data_t *mod)
         dr_symbol_import_iterator_start(mod->handle, NULL);
     while (dr_symbol_import_iterator_hasnext(imp_iter)) {
         dr_symbol_import_t *sym = dr_symbol_import_iterator_next(imp_iter);
-        dr_fprintf(fd, "Name %s\n", sym->name);
+        dr_fprintf(fd, "Name: %s\n", sym->name);
     }
     dr_symbol_import_iterator_stop(imp_iter);
 }
@@ -71,7 +114,7 @@ static void iterate_imports(const module_data_t *mod)
 static bool enumerate_sym(const char *name, size_t modoffs, void *data) {
     if (*name != 0) {
         if (options.verbose){
-            dr_fprintf(fd, "Offset: %x Name: %s\n", modoffs, name);
+            dr_fprintf(fd, "Offset: " PFX " Name: %s\n", modoffs, name);
         }
         if (!strcmp(name, options.wrap_function_name)) {
             towrap = modoffs;
@@ -81,11 +124,12 @@ static bool enumerate_sym(const char *name, size_t modoffs, void *data) {
 }
 
 static void event_module_load(void *drcontext, const module_data_t *mod, bool loaded) {
+    drsym_error_t symr;
     app_pc mod_base = mod->start;
     module_data_t *data = dr_get_main_module();
 
     if (data == NULL) {
-        dr_fprintf(fd, "[ERR] No main module found! \n");
+        dr_fprintf(fd, "[ERR];No main module found! \n");
         return;
     }
     
@@ -94,17 +138,15 @@ static void event_module_load(void *drcontext, const module_data_t *mod, bool lo
     if (module_name == NULL) {
         module_name = dr_module_preferred_name(mod);
     }
-
+    
     if (options.verbose)
-        dr_fprintf(fd, "[MOD] Module name: %s - Full path: %s \n", module_name, mod->full_path);
+        dr_fprintf(fd, "[MOD];%s;" PFX ";%s\n", module_name, mod_base, mod->full_path);
 
     if (mod_base != data->start) {
         dr_free_module_data(data);
         return;
     }
 
-    drsym_error_t symr;
-    
     if (options.verbose) {
         dr_fprintf(fd, "[IMPORTS]: \n");
         iterate_imports(mod);
@@ -113,12 +155,12 @@ static void event_module_load(void *drcontext, const module_data_t *mod, bool lo
 
     symr = drsym_enumerate_symbols(mod->full_path, enumerate_sym, NULL, DRSYM_DEFAULT_FLAGS);
     if (symr != DRSYM_SUCCESS && options.verbose)
-        dr_fprintf(fd, "[ERR] search / enum error %d\n", symr);
+        dr_fprintf(fd, "[ERR];search / enum error %d\n", symr);
 
     if (options.wrap_function) {
         bool wrapped = false;
         app_pc to_wrap = mod_base + towrap;
-        
+
         if (towrap != 0) {
             wrapped = drwrap_wrap(to_wrap, wrap_pre, wrap_post);
             DR_ASSERT(wrapped);
@@ -183,6 +225,9 @@ static dr_emit_flags_t event_bb_analysis(void *drcontext, void *tag, instrlist_t
 
             ret_function = get_info(drcontext, pc, mod, last_instr, fd);
 
+            if (ret_function == NULL)
+                return DR_EMIT_DEFAULT;
+
             if (options.disassembly && !options.disassembly_function)
                 instrlist_disassemble(drcontext, (app_pc)tag, bb, fd);
             else if ((!options.disassembly && options.disassembly_function) && !strcmp(options.function_name, ret_function))
@@ -208,6 +253,8 @@ static dr_emit_flags_t event_bb_analysis(void *drcontext, void *tag, instrlist_t
     dr_mutex_lock(mod_lock);
         
     ret_function = get_info(drcontext, pc, mod, last_instr, fd);
+    if (ret_function == NULL)
+        return DR_EMIT_DEFAULT;
 
     if (options.disassembly && !options.disassembly_function)
         instrlist_disassemble(drcontext, (app_pc)tag, bb, fd);
@@ -227,7 +274,7 @@ static dr_signal_action_t event_signal(void *drcontext, dr_siginfo_t *info) {
     if (info->sig == SIGTERM) {
         return DR_SIGNAL_SUPPRESS;
     } else if (info->sig == SIGSEGV || info->sig == SIGBUS || info->sig == SIGABRT) {
-        dr_fprintf(fd, "[CRASH] signal number %d\n", info->sig);
+        dr_fprintf(fd, "[CRASH];%d;%s;" PFX "\n", info->sig, strsignal(info->sig), info->mcontext->pc);
     }        
 
     return DR_SIGNAL_DELIVER;

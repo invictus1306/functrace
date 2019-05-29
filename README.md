@@ -2,28 +2,35 @@
 
 *functrace* is a tool that helps to analyze a binary file with dynamic instrumentation using *DynamoRIO* (<http://dynamorio.org/>).
 
-These are some implemented features:
+These are some implemented features (based on DynamoRIO):
 
 - [ ] disassemble all the executed code
-- [ ] disassemble a specific function
-- [ ] get arguments of a specific function
-- [ ] get return value of a specific function
+- [ ] disassemble a specific function (dump if these are addresses)
+- [ ] get arguments of a specific function (dump if these are addresses)
+- [ ] get return value of a specific function (dump if this is an address)
 - [ ] monitors application signals
 - [ ] generate a report file
+- [ ] *ghidra*(<https://ghidra-sre.org/>) coverage script (based on the functrace report file)
 
 ## Setup
 
 ```shell
+$ wget https://github.com/DynamoRIO/dynamorio/releases/download/release_7_0_0_rc1/DynamoRIO-Linux-7.0.0-RC1.tar.gz
+$ tar xvzf DynamoRIO-Linux-7.0.0-RC1.tar.gz
 $ git clone https://github.com/invictus1306/functrace
-$ mkdir build && cd build
-$ cmake .. -DDynamoRIO_DIR=<path_to_dr/cmake/>
+$ mkdir -p functrace/build
+$ cd functrace/build
+$ cmake .. -DDynamoRIO_DIR=/full_DR_path/DynamoRIO-Linux-7.0.0-RC1/cmake/
 $ make -j4
 ```
+## Simple DEMO
+
+![functrace](https://github.com/invictus1306/functrace/blob/master/images/functrace.gif)
 
 ## Using functrace
 
 ```shell
-$ drrun -c libfunctrace.so -- target
+$ drrun -c libfunctrace.so -report_file report -- target_program [args]
 ```
 
 ### Options
@@ -49,12 +56,12 @@ $ drrun -c libfunctrace.so -report_file report -verbose -- target_program [args]
 
 #### Option *-disassemby*
 ```shell
-$ drrun -c libfunctrace.so -report_file report -disassembly -verbose -- target_program [args]
+$ drrun -c libfunctrace.so -report_file report -disassembly -- target_program [args]
 ```
 
 #### Option *-disas_func*
 ```shell
-$ drrun -c libfunctrace.so -report_file report -disas_func name_function -verbose -- target_program [args]
+$ drrun -c libfunctrace.so -report_file report -disas_func name_function -- target_program [args]
 ```
 
 #### Option *-wrap_function* and *-wrap_function_args*
@@ -67,8 +74,19 @@ $ drrun -c libfunctrace.so -report_file report -wrap_function name_function -wra
 $ drrun -c libfunctrace.so -report_file report -cbr -- target_program [args]
 ```
 
-Using [beebug](https://github.com/invictus1306/beebug) it is possible to see the reports graphically.
+### CVE-2018-4013 - Vulnerability Analysis
 
-### Real case - Vulnerability Analysis
+A vulnerability on the [LIVE555 RTSP](http://www.live555.com/) server library. This is the [description](https://www.cvedetails.com/cve/CVE-2018-4013/).
 
-From vulnerability report to a crafted packet using instrumentation [https://invictus1306.github.io/vulnerabilitis/2018/12/29/functrace.html]
+![vulnanalysis](https://github.com/invictus1306/functrace/blob/master/images/CVE-2018-4013.gif)
+
+## Working enviroment
+Tested on Ubuntu 16.04.5 LTS 64 bit
+
+## Future features
+* Ghidra plugin
+* Visual setup interface
+* Store and compare different coverage analysis
+* Run DR directy
+* Add more functionality to functrace
+* Support for Android
