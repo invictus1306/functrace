@@ -1,5 +1,5 @@
 //ghidra coverage script (based on functrace)
-//@author functrace Sindoni @invictus1306 
+//@author Andrea Sindoni @invictus1306 
 //@category _NEW_
 //@keybinding 
 //@menupath 
