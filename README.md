@@ -17,10 +17,19 @@ These are some implemented features (based on DynamoRIO):
 ```shell
 $ wget https://github.com/DynamoRIO/dynamorio/releases/download/release_7_0_0_rc1/DynamoRIO-Linux-7.0.0-RC1.tar.gz
 $ tar xvzf DynamoRIO-Linux-7.0.0-RC1.tar.gz
+```
+OR
+```shell
+$ wget https://github.com/DynamoRIO/dynamorio/releases/download/cronbuild-7.91.18047/DynamoRIO-x86_64-Linux-7.91.18047-0.tar.gz
+$ tar xvzf DynamoRIO-x86_64-Linux-7.91.18047-0.tar.gz
+```
+You can also clone and compile directly DynamoRIO
+
+```shell
 $ git clone https://github.com/invictus1306/functrace
 $ mkdir -p functrace/build
 $ cd functrace/build
-$ cmake .. -DDynamoRIO_DIR=/full_DR_path/DynamoRIO-Linux-7.0.0-RC1/cmake/
+$ cmake .. -DDynamoRIO_DIR=/full_DR_path/cmake/
 $ make -j4
 ```
 ## Simple DEMO
@@ -87,6 +96,6 @@ Tested on Ubuntu 16.04.5 LTS 64 bit
 * Ghidra plugin
 * Visual setup interface
 * Store and compare different coverage analysis
-* Run DR directy
+* Run DR directy from ghidra
 * Add more functionality to functrace
 * Support for Android
